@@ -35,7 +35,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -65,6 +64,17 @@ public class MainActivityFragment extends Fragment
 
     }
 
+    @Override
+    public void onStart()
+    {
+        super.onStart();
+        String locationPref = getPreferenceLocation();
+        postalCode = locationPref + ",in";
+        FetchWeatherTask weatherTask = new FetchWeatherTask();
+        weatherTask.execute(postalCode);
+        Log.d(TAG, "onStart: Prefernce location: " + postalCode);
+    }
+
     private String getPreferenceLocation()
     {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
@@ -75,10 +85,11 @@ public class MainActivityFragment extends Fragment
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState)
     {
-        String[] data = {"Today - Sunny -- 88 / 63",
+        /*String[] data = {"Today - Sunny -- 88 / 63",
                 "Tomorrow - Foggy - 70 / 46", "Wed - Cloudy - 72 / 63", "Thu - Rainy - 35 / 25",
-                "Fri - Foggy - 65 / 38", "Sat - Sunny - 85 / 70"};
-        List<String> weatherForecast = new ArrayList<>(Arrays.asList(data));
+                "Fri - Foggy - 65 / 38", "Sat - Sunny - 85 / 70"};*/
+//        List<String> weatherForecast = new ArrayList<>(Arrays.asList(data));
+        List<String> weatherForecast = new ArrayList<>();
 
         String locationPref = getPreferenceLocation();
         postalCode = locationPref + ",in";
