@@ -1,8 +1,12 @@
 package test.baali.ui;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.text.format.Time;
 import android.util.Log;
@@ -12,6 +16,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -54,8 +59,16 @@ public class MainActivityFragment extends Fragment
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
+
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+
+    }
+
+    private String getPreferenceLocation()
+    {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getContext());
+        return preferences.getString("location", "600088");
     }
 
     @Override
@@ -67,12 +80,25 @@ public class MainActivityFragment extends Fragment
                 "Fri - Foggy - 65 / 38", "Sat - Sunny - 85 / 70"};
         List<String> weatherForecast = new ArrayList<>(Arrays.asList(data));
 
-
-        weatherAdapter = new ArrayAdapter<String>(getActivity(), R.layout.list_item_forecast, R.id
-                .list_item_forecast_textview, weatherForecast);
-
+        String locationPref = getPreferenceLocation();
+        postalCode = locationPref + ",in";
+        weatherAdapter = getWeatherAdapter(weatherForecast);
+        Log.d(TAG, "onCreateView: Prefernce location: " + postalCode);
 
         final View rootView = inflater.inflate(R.layout.fragment_main, container, false);
+
+        // create user selected place weather when he clicks button
+        userSelectedPlaceView(rootView);
+
+
+        inflateWeatherList(rootView);
+
+        createWeatherView(postalCode);
+        return rootView;
+    }
+
+    private void userSelectedPlaceView(final View rootView)
+    {
         Button postalButton = (Button) rootView.findViewById(R.id.btnGetPostalCodeWeather);
         postalButton.setOnClickListener(new View.OnClickListener()
         {
@@ -80,18 +106,45 @@ public class MainActivityFragment extends Fragment
             public void onClick(View v)
             {
                 EditText userPostalCode = (EditText) rootView.findViewById(R.id.postalCode);
-                String code = userPostalCode.getText() + ",in";
-                Log.d(TAG, code);
-                FetchWeatherTask weatherTask = new FetchWeatherTask();
-                Log.d(TAG, code);
-                weatherTask.execute(code);
+                postalCode = userPostalCode.getText() + ",in";
+                Log.d(TAG, postalCode);
+                createWeatherView(postalCode);
 
             }
         });
+    }
 
-        ListView weatherListView = (ListView) rootView.findViewById(R.id.listview_forecast);
+    private void createWeatherView(String code)
+    {
+        FetchWeatherTask weatherTask = new FetchWeatherTask();
+        weatherTask.execute(code);
+    }
+
+    private void inflateWeatherList(View rootView)
+    {
+        final ListView weatherListView = (ListView) rootView.findViewById(R.id.listview_forecast);
         weatherListView.setAdapter(weatherAdapter);
-        return rootView;
+        weatherListView.setOnItemClickListener(new AdapterView.OnItemClickListener()
+        {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id)
+            {
+                //TextView tv = (TextView) view.findViewById(R.id.list_item_forecast_textview);
+                String text = weatherAdapter.getItem(position);
+                /*Toast.makeText(getActivity(), text, Toast.LENGTH_SHORT)
+                        .show();*/
+                Intent detail = new Intent(getActivity(), DetailActivity.class);
+                detail.putExtra("data", text);
+                startActivity(detail);
+            }
+        });
+    }
+
+    @NonNull
+    private ArrayAdapter<String> getWeatherAdapter(List<String> weatherForecast)
+    {
+        return new ArrayAdapter<String>(getActivity(), R.layout.list_item_forecast, R.id
+                .list_item_forecast_textview, weatherForecast);
     }
 
     @Override
@@ -105,12 +158,22 @@ public class MainActivityFragment extends Fragment
     {
         int id = item.getItemId();
         if (id == R.id.action_refresh) {
-            FetchWeatherTask weatherTask = new FetchWeatherTask();
-            String postalCode = "600088,in";
-            weatherTask.execute(postalCode);
+            postalCode = getPreferenceLocation() + ",in";
+            createWeatherView(postalCode);
             return true;
         }
+        if(id == R.id.action_settings)
+        {
+            Intent settings = new Intent(getActivity(), SettingsActivity.class);
+            startActivity(settings);
+        }
+
         return super.onOptionsItemSelected(item);
+    }
+
+    private void loadDefaultPreferences()
+    {
+
     }
 
     public class FetchWeatherTask extends AsyncTask<String, Void, String[]>

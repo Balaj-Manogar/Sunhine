@@ -2,4 +2,9 @@
     <string name="app_name">UI_Practice</string>
     <string name="action_settings">Settings</string>
     <string name="action_refresh" translatable="false">Refresh</string>
+    <string name="title_activity_detail">DetailActivity</string>
+    <string name="title_activity_settings">SettingsActivity</string>
+    <string name="location_label" translatable="false">Location</string>
+    <string name="location_key" translatable="false">location</string>
+    <string name="location_default_value" translatable="false">600088</string>
 </resources>
