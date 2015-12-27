@@ -1,5 +1,6 @@
 package test.baali.ui;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -46,9 +47,10 @@ public class MainActivityFragment extends Fragment
     private String appId = "2fbe7f29cdb9ba92f88cb28249c3a028";
     private String postalCode = "600088,in";
 
+    private String TAG = "Explore: MainActivityFragment";
 
 
-    private String TAG = "MainActivityFragment";
+
 
 
     public MainActivityFragment()
@@ -58,16 +60,38 @@ public class MainActivityFragment extends Fragment
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
-
         super.onCreate(savedInstanceState);
+        Log.d(TAG, "onCreate: ");
         setHasOptionsMenu(true);
 
+    }
+
+    @Override
+    public void onStop()
+    {
+        Log.d(TAG, "onStop: ");
+        super.onStop();
+    }
+
+    @Override
+    public void onPause()
+    {
+        Log.d(TAG, "onPause: ");
+        super.onPause();
+    }
+
+    @Override
+    public void onAttach(Context context)
+    {
+        Log.d(TAG, "onAttach: ");
+        super.onAttach(context);
     }
 
     @Override
     public void onStart()
     {
         super.onStart();
+        Log.d(TAG, "onStart: ");
         String locationPref = getPreferenceLocation();
         postalCode = locationPref + ",in";
         FetchWeatherTask weatherTask = new FetchWeatherTask();
@@ -85,6 +109,8 @@ public class MainActivityFragment extends Fragment
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState)
     {
+        Log.d(TAG, "onCreateView: ");
+        
         /*String[] data = {"Today - Sunny -- 88 / 63",
                 "Tomorrow - Foggy - 70 / 46", "Wed - Cloudy - 72 / 63", "Thu - Rainy - 35 / 25",
                 "Fri - Foggy - 65 / 38", "Sat - Sunny - 85 / 70"};*/
@@ -290,8 +316,17 @@ public class MainActivityFragment extends Fragment
             return shortenedDateFormat.format(time);
         }
 
-        private String formatHighLows(double high, double low)
+        private String formatHighLows(double high, double low, String unitType)
         {
+            if(unitType.equals(getString(R.string.pref_units_imperial))) {
+                high = (high * 1.8) + 32;
+                low = (low * 1.8) + 32;
+            }
+            else if(!unitType.equals(getString(R.string.pref_units_metric)))
+            {
+                Log.d(TAG, "Unit type not found: " + unitType);
+            }
+
             // For presentation, assume the user doesn't care about tenths of a degree.
             long roundedHigh = Math.round(high);
             long roundedLow = Math.round(low);
@@ -333,6 +368,11 @@ public class MainActivityFragment extends Fragment
             dayTime = new Time();
 
             String[] resultStrs = new String[numDays];
+
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            String unitType = preferences.getString(getString(R.string.pref_units_key), getString(R.string.pref_units_metric));
+
+
             for (int i = 0; i < weatherArray.length(); i++) {
                 // For now, using the format "Day, description, hi/low"
                 String day;
@@ -360,7 +400,7 @@ public class MainActivityFragment extends Fragment
                 double high = temperatureObject.getDouble(OWM_MAX);
                 double low = temperatureObject.getDouble(OWM_MIN);
 
-                highAndLow = formatHighLows(high, low);
+                highAndLow = formatHighLows(high, low, unitType);
                 resultStrs[i] = day + " - " + description + " - " + highAndLow;
             }
 
