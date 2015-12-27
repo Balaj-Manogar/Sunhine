@@ -22,6 +22,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -205,8 +206,37 @@ public class MainActivityFragment extends Fragment
             startActivity(settings);
         }
 
+        if(id == R.id.action_map)
+        {
+            Log.d(TAG, "onOptionsItemSelected: map ");
+            openPreferredLocation();
+        }
+
+
+
         return super.onOptionsItemSelected(item);
     }
+
+    private void openPreferredLocation()
+    {
+        String location = getPreferenceLocation();
+        Uri geoLocation = Uri.parse("geo:0,0?").buildUpon()
+                .appendQueryParameter("q", location).build();
+
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setData(geoLocation);
+        Toast.makeText(getContext(), "Google maps menu", Toast.LENGTH_SHORT).show();
+        if(intent.resolveActivity(getActivity().getPackageManager()) != null)
+        {
+            startActivity(intent);
+        }
+        else 
+        {
+            Log.d(TAG, "Couldn't call: " + location + " , no receiving apps installed!");
+        }
+    }
+
+
 
     private void loadDefaultPreferences()
     {
